@@ -31,7 +31,7 @@ func (h *MessageHandler) WireHttpHandler() http.Handler {
 
 	r.POST("/message", h.handleCreateMessage)
 	r.GET("/message/:id", h.handleGetMessage)
-	 r.GET("/thread/:id/messages", h.handleGetThreadMessages) // Example of paginated : GET /thread/6e32eb10-1cbe-4f09-a82e-f706dfe9cf93/messages?limit=10&offset=20
+	r.GET("/thread/:id/messages", h.handleGetThreadMessages)// Example of paginated : GET /thread/6e32eb10-1cbe-4f09-a82e-f706dfe9cf93/messages?limit=10&offset=20
 	r.DELETE("/message/:id", h.handleDeleteMessageById)
 	r.PATCH("/message/:id", h.handleEditMessage)
 	r.POST("/thread", h.handleCreateThread)
