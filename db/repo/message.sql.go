@@ -9,6 +9,20 @@ import (
 	"context"
 )
 
+// Count Messages in a thread
+const countMessagesInThread = `-- name: CountMessagesInThread :one
+SELECT COUNT(*) FROM message
+WHERE thread = $1
+`
+
+func (q *Queries) CountMessagesInThread(ctx context.Context, thread string) (int64, error) {
+	row := q.db.QueryRow(ctx, countMessagesInThread, thread)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+// Create a message
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO message (thread, sender, content)
 VALUES ($1, $2, $3)
@@ -34,6 +48,94 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 	return i, err
 }
 
+// Create a thread
+const createThread = `-- name: CreateThread :one
+INSERT INTO thread (description) 
+VALUES ($1)
+RETURNING id, description, created_at
+`
+type CreateThreadParams struct {
+	Description string `json:"description"`
+}
+
+func (q *Queries) CreateThread(ctx context.Context, arg CreateThreadParams) (Thread, error) {
+	row := q.db.QueryRow(ctx, createThread, arg.Description)
+	var i Thread
+	err := row.Scan(&i.ID, &i.Description, &i.CreatedAt)
+	return i, err
+}
+
+
+// Delete Message
+const deleteMessage = `-- name: DeleteMessage :exec
+DELETE FROM message
+WHERE id = $1
+`
+
+func (q *Queries) DeleteMessage(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, deleteMessage, id)
+	return err
+}
+
+// Delete a thread
+const deleteThread = `-- name: DeleteThread :exec
+DELETE FROM thread
+WHERE id = $1
+`
+
+func (q *Queries) DeleteThread(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, deleteThread, id)
+	return err
+}
+
+// Edit a message
+const editMessage = `-- name: EditMessage :one
+UPDATE message
+SET content = $2
+WHERE id = $1
+RETURNING id, thread, sender, content, created_at
+`
+
+type EditMessageParams struct {
+	ID      string `json:"id"`
+	Content string `json:"content"`
+}
+
+func (q *Queries) EditMessage(ctx context.Context, id string, arg EditMessageParams) (Message, error) {
+	row := q.db.QueryRow(ctx, editMessage, arg.ID, arg.Content)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.Thread,
+		&i.Sender,
+		&i.Content,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+// Get the latest message in a thread
+const getLatestMessageInThread = `-- name: GetLatestMessageInThread :one
+SELECT id, thread, sender, content, created_at FROM message
+WHERE thread = $1
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) GetLatestMessageInThread(ctx context.Context, thread string) (Message, error) {
+	row := q.db.QueryRow(ctx, getLatestMessageInThread, thread)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.Thread,
+		&i.Sender,
+		&i.Content,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+// Get Messages by their ID
 const getMessageByID = `-- name: GetMessageByID :one
 SELECT id, thread, sender, content, created_at FROM message
 WHERE id = $1
@@ -52,6 +154,7 @@ func (q *Queries) GetMessageByID(ctx context.Context, id string) (Message, error
 	return i, err
 }
 
+// Get message by thread
 const getMessagesByThread = `-- name: GetMessagesByThread :many
 SELECT id, thread, sender, content, created_at FROM message
 WHERE thread = $1
@@ -60,6 +163,97 @@ ORDER BY created_at DESC
 
 func (q *Queries) GetMessagesByThread(ctx context.Context, thread string) ([]Message, error) {
 	rows, err := q.db.Query(ctx, getMessagesByThread, thread)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Message{}
+	for rows.Next() {
+		var i Message
+		if err := rows.Scan(
+			&i.ID,
+			&i.Thread,
+			&i.Sender,
+			&i.Content,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// Get message by thread paginated
+const getMessagesByThreadPaginated = `-- name: GetMessagesByThreadPaginated :many
+SELECT id, thread, sender, content, created_at FROM message
+WHERE thread = $1
+ORDER BY created_at ASC
+LIMIT $2 OFFSET $3
+`
+
+type GetMessagesByThreadPaginatedParams struct {
+	Thread string 
+	Limit  int32  
+	Offset int32  
+}
+
+func (q *Queries) GetMessagesByThreadPaginated(ctx context.Context, arg GetMessagesByThreadPaginatedParams) ([]Message, error) {
+	rows, err := q.db.Query(ctx, getMessagesByThreadPaginated, arg.Thread, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Message{}
+	for rows.Next() {
+		var i Message
+		if err := rows.Scan(
+			&i.ID,
+			&i.Thread,
+			&i.Sender,
+			&i.Content,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// Get a thread by its ID
+const getThreadID = `-- name: GetThreadID :one
+SELECT id, description, created_at FROM thread
+WHERE id = $1
+`
+
+func (q *Queries) GetThreadID(ctx context.Context, id string) (Thread, error) {
+	row := q.db.QueryRow(ctx, getThreadID, id)
+	var i Thread
+	err := row.Scan(&i.ID, &i.Description, &i.CreatedAt)
+	return i, err
+}
+
+// Search messages in the database by keyword
+const searchMessagesByKeyword = `-- name: SearchMessagesByKeyword :many
+SELECT id, thread, sender, content, created_at FROM message 
+WHERE thread = $1 AND content ILIKE '%' || $2 || '%'
+ORDER BY created_at DESC
+`
+
+type SearchMessagesByKeywordParams struct {
+	Thread  string `json:"thread"`
+	Column2 string `json:"column_2"` // THis is the keyword
+}
+
+func (q *Queries) SearchMessagesByKeyword(ctx context.Context, arg SearchMessagesByKeywordParams) ([]Message, error) {
+	rows, err := q.db.Query(ctx, searchMessagesByKeyword, arg.Thread, arg.Column2)
 	if err != nil {
 		return nil, err
 	}

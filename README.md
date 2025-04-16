@@ -1,11 +1,11 @@
 # sqlc-example-api
 
-This repository provides starter code for creating a API using sqlc and the Gin web framework in Go. This is part of the Relational Database course as part of the Iknite Space training.
+This repository provides starter code for creating an API using sqlc and the Gin web framework in Go. This is part of the Relational Database course as part of the Iknite Space training.
 
 
 Project Structure
 
-* `api/`: Contains API route definitions and handler functions. You will need to edit this file, if you want to add or modify the apit endpoints.
+* `api/`: Contains API route definitions and handler functions. You will need to edit this file, if you want to add or modify the api endpoints.
 * `cmd/api/`: Houses the main application entry point. You shouldn't need to edit any files in this directory.
 * `db/migrations`: Contains sql files that create/update the database schema (tables and columns) used by the api. If you need to update the database schema make your changes here.
 * `db/query`: This folder contains SQL query files. These files define the database queries used by the application, which are processed by sqlc to generate type-safe Go code for interacting with the database.
