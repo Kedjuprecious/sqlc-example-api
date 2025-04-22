@@ -1,57 +1,23 @@
--- name: CreateMessage :one
-INSERT INTO message (thread, sender, content)
+-- name: CreateCustomer :one
+INSERT INTO customer (customer_name, phone, email)
 VALUES ($1, $2, $3)
 RETURNING *;
 
--- name: GetMessageByID :one
-SELECT * FROM message
-WHERE id = $1;
-
--- name: GetMessagesByThread :many
-SELECT * FROM message
-WHERE thread = $1
-ORDER BY created_at DESC;
-
--- name: DeleteMessage :exec
-DELETE FROM message
-WHERE id = $1;
-
--- name: EditMessage :one
-UPDATE message
-SET content = $2
+-- name: GetCustomerById :one
+SELECT * FROM customer
 WHERE id = $1
-RETURNING *;
-
--- name: SearchMessagesByKeyword :many
-SELECT * FROM message 
-WHERE thread = $1 AND content ILIKE '%' || $2 || '%'
-ORDER BY created_at DESC;
-
--- name: CreateThread :one
-INSERT INTO thread (description) 
-VALUES ($1)
-RETURNING *;
-
--- name: GetThreadID :one
-SELECT * FROM thread
-WHERE id = $1;
-
--- name: CountMessagesInThread :one
-SELECT COUNT(*) FROM message
-WHERE thread = $1;
-
--- name: GetLatestMessageInThread :one
-SELECT * FROM message
-WHERE thread = $1
-ORDER BY created_at DESC
 LIMIT 1;
 
--- name: DeleteThread :exec
-DELETE FROM thread 
+-- name: CreateOrder :one
+INSERT INTO "order" (customer_id, total_price)
+VALUES ($1, $2)
+RETURNING *;
+
+-- name: UpdateOrderStatus :exec
+UPDATE "order"
+SET order_status = $2
 WHERE id = $1;
 
--- name: GetMessagesByThreadPaginated :many
-SELECT * FROM message
-WHERE thread = $1
-ORDER BY created_at ASC
-LIMIT $2 OFFSET $3;
+-- name: DeleteCustomer :exec
+DELETE FROM customer 
+WHERE id = $1;

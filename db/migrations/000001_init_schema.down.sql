@@ -1,2 +1,1 @@
-DROP TABLE thread;
-DROP TABLE messages;
+DROP TABLE customer;
