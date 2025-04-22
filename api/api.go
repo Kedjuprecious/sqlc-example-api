@@ -4,10 +4,13 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
 	// "strconv"
 	// "strings"
+	"github.com/Iknite-Space/sqlc-example-api/campay"
 	"github.com/Iknite-Space/sqlc-example-api/db/repo"
 	"github.com/gin-gonic/gin"
 )
@@ -118,7 +121,26 @@ func (h *MessageHandler) handleCreateOrder(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, order)
+	// Call Campay to initiate payment
+	ref := order.ID  // Or generate custom reference order.ID
+number:= "673990801"//"673990801"
+des := "gfry"
+amount := "4"
+
+
+	APIkey := os.Getenv("API_KEY")
+	paymentResp, _ := campay.SendPaymentRequest(APIkey, number, amount, des, ref)
+	time.Sleep(10 * time.Second)
+
+	paymentStatus:= campay.GetStatus(APIkey, paymentResp.Reference)
+
+
+	c.JSON(http.StatusOK, gin.H{
+		"order":      order,
+		"paymentReq": paymentResp,
+		"Status":  paymentStatus,
+	})
+	// c.JSON(http.StatusOK, order)
 }
 
 // Update Status
