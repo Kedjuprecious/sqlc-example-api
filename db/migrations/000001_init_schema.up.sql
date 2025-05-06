@@ -1,18 +1,9 @@
-
-
-CREATE TABLE "thread" (
+CREATE TABLE "customer" (
   "id" VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::varchar(36),
-  "description" TEXT NOT NULL,
+  "customer_name" VARCHAR(100) NOT NULL,
+  "phone" VARCHAR NOT NULL UNIQUE,
+  "email" VARCHAR(100) NOT NULL UNIQUE,  
   "created_at" TIMESTAMP DEFAULT now()
 );
 
-
-CREATE TABLE "message" (
-  "id" VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::varchar(36),
-  "thread" VARCHAR(36) NOT NULL,
-  "sender" VARCHAR(100) NOT NULL,
-  "content" TEXT NOT NULL,
-  "created_at" TIMESTAMP DEFAULT now(),
-  CONSTRAINT fk_thread FOREIGN KEY ("thread") REFERENCES "thread" ("id") ON DELETE CASCADE
-);
 
