@@ -123,9 +123,9 @@ func (h *MessageHandler) handleCreateOrder(c *gin.Context) {
 
 	// Call Campay to initiate payment
 	ref := order.ID  // Or generate custom reference order.ID
-number:= "673990801"//"673990801"
-des := "gfry"
-amount := "4"
+	number:= "673990801"//"673990801"
+	des := "gfry"
+	amount := "4"
 
 
 	APIkey := os.Getenv("API_KEY")

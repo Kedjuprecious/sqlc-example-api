@@ -61,7 +61,11 @@ func SendPaymentRequest(apikey string, from string, amount string, reference str
 	}
 
 	// Read the response
-	defer resp.Body.Close()
+defer func() {
+    if err := resp.Body.Close(); err != nil {
+        fmt.Println("Error closing response body:", err)
+    }
+}()
 
 	body, _ := io.ReadAll(resp.Body)
 
@@ -80,35 +84,36 @@ func SendPaymentRequest(apikey string, from string, amount string, reference str
 
 
 // Function to check transaction status
-func GetStatus(apiKey string, reference string) CheckStatus{
+func GetStatus(apiKey string, reference string) CheckStatus {
 	client := &http.Client{}
-	url1 := fmt.Sprintf("https://demo.campay.net/api/transaction/%s/", reference) // Insert reference here
+	url1 := fmt.Sprintf("https://demo.campay.net/api/transaction/%s/", reference)
 
 	req1, err := http.NewRequest("GET", url1, nil)
-	
 	if err != nil {
 		fmt.Println("Error creating GET request:", err)
-		// return
+		return CheckStatus{}
 	}
 
 	req1.Header.Set("Authorization", "Token "+apiKey)
 	req1.Header.Set("Content-Type", "application/json")
-	
 
 	resp1, err := client.Do(req1)
 	if err != nil {
-		fmt.Println("Error making GET request:", err)
-		// return
+		fmt.Println("Error sending GET request:", err)
+		return CheckStatus{}
 	}
-	
-	defer resp1.Body.Close()
-
-	// Print the body response for degugging
-	fmt.Println("Raw Status Response:", resp1)
+	defer func() {
+		if err := resp1.Body.Close(); err != nil {
+			fmt.Println("Error closing response body:", err)
+		}
+	}()
 
 	var status CheckStatus
-	json.NewDecoder(resp1.Body).Decode(&status)
+	err = json.NewDecoder(resp1.Body).Decode(&status)
+	if err != nil {
+		fmt.Println("Error decoding status response:", err)
+		return CheckStatus{}
+	}
 
 	return status
-
 }
