@@ -29,3 +29,10 @@ jobs:
     steps:
      - id: govulncheck
        uses: golang/govulncheck-action@v1
+
+  test-link:
+    name: Run test
+    runs-on: ubuntu-latest
+    steps:
+      - id: test
+        run: go test ./... 
