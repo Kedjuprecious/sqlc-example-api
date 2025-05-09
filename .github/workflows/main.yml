@@ -40,3 +40,15 @@ jobs:
           go-version: stable
       - id: test
         run: go test ./... 
+
+  build:
+    name: Run build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - id: test
+        run: go build -o ./bin/api ./cmd/api/...
+
