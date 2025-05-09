@@ -22,8 +22,6 @@ jobs:
           go-version: stable
       - name: golangci-lintUpdate main.yml
         uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.1
           
   govulncheck_job:
     runs-on: ubuntu-latest
